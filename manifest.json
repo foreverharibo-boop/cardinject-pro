@@ -1,0 +1,17 @@
+{
+    "display_name": "CardInject Pro",
+    "loading_order": 999999,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "혜담",
+    "version": "1.2.3",
+    "homePage": "",
+    "auto_update": false,
+    "generate_interceptor": "csiInterceptor",
+    "hooks": {
+        "enable": "onEnable",
+        "disable": "onDisable"
+    }
+}

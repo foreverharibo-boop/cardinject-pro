@@ -1,0 +1,9 @@
+{
+    "name": "cardinject-pro",
+    "private": true,
+    "version": "1.2.3",
+    "type": "module",
+    "scripts": {
+        "test": "node --test tests/*.test.mjs"
+    }
+}

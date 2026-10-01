@@ -1,0 +1,336 @@
+/* CharSheet Injector — white/gray, sticky header/footer, full modal scroll */
+
+#csi-backdrop {
+    display: none;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0.35);
+    z-index: 99998 !important;
+}
+
+/* ── Modal: 전체가 하나의 스크롤 컨테이너 ── */
+#csi-modal {
+    display: none;
+    position: fixed !important;
+    z-index: 99999 !important;
+    top: 5vh;
+    left: 50%;
+    width: min(560px, 94vw);
+    max-height: 88vh;
+    transform: translateX(-50%);
+
+    /* 모달 전체가 스크롤 — 내부 flex 스크롤 없음 */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain;
+
+    background: #fff;
+    border-radius: 16px;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08);
+
+    font-family: 'Segoe UI', -apple-system, 'Noto Sans KR', sans-serif;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 텍스트 그림자/블러 전체 제거 */
+#csi-modal *, #csi-modal *::before, #csi-modal *::after {
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+#csi-modal { box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08) !important; }
+.csi-knob::before { box-shadow: 0 1px 3px rgba(0,0,0,.2) !important; }
+
+/* ── Header: 상단 고정 ── */
+.csi-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #ebebeb;
+    background: #fff;
+}
+.csi-title {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 15px; font-weight: 700; color: #111;
+}
+.csi-icon {
+    width: 28px; height: 28px; background: #111;
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #fff; font-size: 12px; flex-shrink: 0;
+}
+.csi-x {
+    background: none; border: none; width: 28px; height: 28px;
+    border-radius: 7px; font-size: 20px; color: #aaa;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; padding: 0; line-height: 1;
+    transition: background .15s, color .15s;
+}
+.csi-x:hover { background: #f2f2f2; color: #333; }
+
+/* ── Char bar ── */
+.csi-charbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; background: #fafafa;
+    border-bottom: 1px solid #ebebeb;
+}
+.csi-char-ico { font-size: 13px; color: #888; flex-shrink: 0; }
+.csi-char-sel {
+    flex: 1; background: #fff; border: 1px solid #ddd;
+    border-radius: 8px; padding: 6px 10px;
+    font-size: 13px; font-weight: 600; color: #111;
+    outline: none; cursor: pointer; font-family: inherit;
+    transition: border-color .15s;
+}
+.csi-char-sel:focus { border-color: #888; }
+.csi-pill {
+    background: #111; color: #fff;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+}
+
+/* ── Analyze zone ── */
+.csi-top { padding: 10px 20px 2px; background: #fff; }
+.csi-analyze-btn {
+    width: 100%; padding: 12px; background: #111; color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .15s, transform .1s; font-family: inherit;
+}
+.csi-analyze-btn:hover:not(:disabled) { background: #333; transform: translateY(-1px); }
+.csi-analyze-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.csi-status {
+    margin-top: 4px; font-size: 12px; color: #999;
+    text-align: center; min-height: 0;
+}
+.csi-status:empty { margin-top: 0; }
+.csi-s-ok   { color: #2a7a2a !important; }
+.csi-s-err  { color: #c00 !important; }
+.csi-s-load { color: #555 !important; }
+
+.csi-sep { height: 1px; background: #ebebeb; margin: 0; }
+
+/* ── 카테고리 목록: 자연 흐름, 모달 전체가 스크롤 ── */
+.csi-list {
+    padding: 2px 20px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+    /* overflow 없음 — 모달이 스크롤 */
+}
+
+.csi-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 48px 20px; gap: 12px;
+    color: #ccc; text-align: center;
+}
+.csi-empty i { font-size: 28px; }
+.csi-empty p { margin: 0; font-size: 13px; line-height: 1.7; color: #aaa; }
+
+/* ── Card ── */
+.csi-card {
+    background: #fff; border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    /* overflow: hidden 제거 — 내용 짤리지 않게 */
+    transition: border-color .15s, opacity .15s;
+}
+.csi-card:hover { border-color: #bbb; }
+.csi-card.csi-off { opacity: .4; }
+
+.csi-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 13px; background: #fafafa;
+    border-bottom: 1px solid #ebebeb;
+    border-radius: 10px 10px 0 0;
+    gap: 10px;
+}
+.csi-card-left  { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.csi-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.csi-imp {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px; flex-shrink: 0;
+    border: 1px solid currentColor;
+}
+.csi-imp-high   { color: #c00; background: #fff0f0; }
+.csi-imp-medium { color: #885500; background: #fff8ee; }
+.csi-imp-low    { color: #2a7a2a; background: #f0fff0; }
+
+.csi-cname {
+    font-size: 13px; font-weight: 700; color: #111;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.csi-chevron {
+    background: none; border: none; width: 26px; height: 26px;
+    border-radius: 6px; color: #aaa; cursor: pointer; font-size: 11px;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    transition: background .15s, color .15s;
+}
+.csi-chevron:hover { background: #eee; color: #333; }
+
+/* Toggle */
+.csi-tog { position: relative; width: 36px; height: 20px; display: inline-block; cursor: pointer; }
+.csi-tog input { opacity: 0; width: 0; height: 0; }
+.csi-knob { position: absolute; inset: 0; background: #ddd; border-radius: 20px; transition: background .2s; }
+.csi-knob::before {
+    content: ''; position: absolute; width: 14px; height: 14px;
+    left: 3px; bottom: 3px; background: #fff; border-radius: 50%;
+    transition: transform .2s;
+}
+.csi-tog input:checked + .csi-knob           { background: #111; }
+.csi-tog input:checked + .csi-knob::before   { transform: translateX(16px); }
+
+/* Textarea — 카드 내부 스크롤 */
+.csi-textarea-wrap { padding: 10px 13px 0; }
+.csi-ta {
+    width: 100%; box-sizing: border-box; padding: 9px 11px;
+    background: #fafafa; border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 12.5px; color: #111; line-height: 1.6;
+    font-family: 'Consolas', 'Menlo', monospace;
+    resize: vertical; outline: none;
+    min-height: 100px;
+    max-height: 260px;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    transition: border-color .15s;
+    display: block;
+}
+.csi-ta:focus { border-color: #888; background: #fff; }
+
+/* Card body */
+.csi-card-body {
+    padding: 10px 13px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    background: #fff;
+    border-radius: 0 0 10px 10px;
+}
+.csi-row { display: flex; align-items: center; gap: 10px; }
+.csi-lbl { font-size: 11px; color: #888; font-weight: 600; white-space: nowrap; min-width: 36px; }
+
+.csi-sel {
+    flex: 1; padding: 7px 9px; background: #fff;
+    border: 1px solid #ddd; border-radius: 7px;
+    font-size: 12px; color: #111; outline: none; cursor: pointer;
+    font-family: inherit; transition: border-color .15s;
+    /* 선택지가 길어도 잘리지 않게 */
+    min-width: 0;
+}
+.csi-sel:focus { border-color: #888; }
+
+/* Depth 입력 — 확실히 보이게 */
+.csi-depth-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 0;
+}
+.csi-num {
+    width: 72px; padding: 7px 10px; text-align: center;
+    background: #fff; border: 1.5px solid #aaa;
+    border-radius: 7px; font-size: 14px; font-weight: 600; color: #111;
+    outline: none; font-family: inherit;
+    /* 모바일 숫자 키패드 */
+    inputmode: numeric;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+}
+.csi-num:focus { border-color: #333; background: #f9f9f9; }
+/* number 스피너 제거 */
+.csi-num::-webkit-outer-spin-button,
+.csi-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.csi-hint { font-size: 11px; color: #bbb; }
+
+/* ── 프리셋 프롬프트 위치 재배치 섹션 ── */
+.csi-preset-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; font-size: 13px; font-weight: 700; color: #111;
+    cursor: pointer; user-select: none;
+    transition: background .15s;
+}
+.csi-preset-header:hover { background: #fafafa; }
+.csi-preset-header i { color: #aaa; font-size: 11px; transition: transform .15s; }
+.csi-preset-list {
+    padding: 4px 20px 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    /* 중첩 스크롤 제거 — 모바일에서 안쪽 스크롤 터치가 안 먹는 문제 때문에
+       바깥 모달(#csi-modal) 하나의 스크롤에 자연스럽게 흐르도록 함 */
+}
+.csi-preset-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; background: #fafafa;
+    border: 1px solid #ebebeb; border-radius: 8px;
+}
+.csi-preset-name {
+    flex: 0 0 40%; font-size: 12px; font-weight: 600; color: #333;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.csi-preset-pos-sel {
+    flex: 1; padding: 6px 8px; background: #fff;
+    border: 1px solid #ddd; border-radius: 6px;
+    font-size: 11.5px; color: #111; outline: none; cursor: pointer;
+    font-family: inherit; min-width: 0;
+}
+
+/* ── Footer: 하단 고정 ── */
+.csi-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-top: 1px solid #ebebeb;
+    background: #fafafa; gap: 10px;
+}
+.csi-pri {
+    padding: 9px 20px; background: #111; color: #fff;
+    border: none; border-radius: 9px; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: background .15s; font-family: inherit;
+}
+.csi-pri:hover { background: #333; }
+.csi-sec {
+    padding: 9px 16px; background: #fff; color: #333;
+    border: 1px solid #ddd; border-radius: 9px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background .15s, border-color .15s; font-family: inherit;
+}
+.csi-sec:hover { background: #f5f5f5; border-color: #bbb; }
+.csi-ghost {
+    padding: 9px 12px; background: none; color: #aaa; border: none;
+    border-radius: 9px; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background .15s, color .15s; font-family: inherit;
+}
+.csi-ghost:hover { background: #f2f2f2; color: #555; }
+
+/* CSI 자체 토스트 (ST의 공용 toastr는 절대 건드리지 않음 — 건드리면 ST 네이티브
+   토스트까지 다 같이 망가짐, 실제로 한 번 그런 적 있음) */
+.csi-own-toast {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    background: #111;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: 'Segoe UI', -apple-system, 'Noto Sans KR', sans-serif;
+    max-width: 260px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+}
+.csi-own-toast.csi-toast-show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(4px);
+}
+/* success/error/warning 구분 없이 전부 까만 배경 + 흰 글씨로 통일 */
